@@ -1,0 +1,26 @@
+.category-list {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+  
+.category-list ul {
+  list-style-type: none; 
+  padding: 0;
+}
+
+.category-list ul li {
+  border-radius: 20px; 
+  padding: 10px 15px; 
+}
+
+.category-link {
+  text-decoration: none; 
+  color: inherit; 
+  font-weight: bold;
+  word-wrap: break-word;
+  align-items: center;
+}
+  
+.category-link:hover {
+  color: white; 
+}
