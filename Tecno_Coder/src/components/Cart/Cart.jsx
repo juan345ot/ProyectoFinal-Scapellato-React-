@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { CartContext } from '../../context/CartContext';
 
 // Importa el nuevo componente
-import Checkout from '../Checkout/Checkout'; // Asumiendo que Checkout.jsx está en src/components/Checkout
+import Checkout from '../Checkout/Checkout'; 
 function Cart() {
   const { cartItems, removeItem, clearCart, totalPrice, decreaseItemQuantity, increaseItemQuantity } = useContext(CartContext);
 
@@ -59,7 +59,7 @@ function Cart() {
               <Link to="/" className="bg-dorado-claro hover:bg-yellow-500 text-black font-bold py-1 px-2 rounded text-xs">
                 Seguir comprando
               </Link>
-              <Link to="/cart" className="bg-black hover:bg-gray-800 text-dorado-claro font-bold py-1 px-2 rounded text-xs">
+              <Link to="/checkout" className="bg-black hover:bg-gray-800 text-dorado-claro font-bold py-1 px-2 rounded text-xs">
                 Terminar compra
               </Link>
             </div>

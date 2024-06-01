@@ -2,6 +2,7 @@ import React from 'react';
 import NavBar from '../NavBar/NavBar.jsx';
 import Footer from '../Footer/Footer';
 import './Layout.css';
+
 function Layout({ children }) {
   return (
     <div className="layout">

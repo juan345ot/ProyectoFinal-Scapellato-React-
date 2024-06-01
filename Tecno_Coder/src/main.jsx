@@ -18,7 +18,7 @@ const firebaseConfig = {
 
 // Inicializa Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app); //  <-- ¡Exporta db!
+export const db = getFirestore(app); 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <CartProvider>

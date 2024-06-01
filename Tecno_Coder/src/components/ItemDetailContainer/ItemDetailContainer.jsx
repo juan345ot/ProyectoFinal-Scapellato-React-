@@ -13,11 +13,11 @@ function ItemDetailContainer() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const docRef = doc(db, 'ItemCollection', itemId);
+        const docRef = doc(db, 'ItemCollection', itemId); // Cambiado a const docRef para mayor claridad
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setProduct({ id: docSnap.id, ...docSnap.data() });
+          setProduct({ id: docSnap.id, ...docSnap.data() }); // Se agregó el id del producto
         } else {
           console.log("El producto no existe"); 
         }

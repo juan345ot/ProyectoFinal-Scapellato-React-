@@ -5,10 +5,9 @@ import { CartContext } from '../../context/CartContext';
 import './ItemDetail.css';
 
 function ItemDetail({ product }) { 
-  const { cartItems, addItem } = useContext(CartContext);
+  const { cartItems, addItem, setCartItems } = useContext(CartContext); // Añade setCartItems
   const [itemCount, setItemCount] = useState(0);
 
-  // Buscamos el producto en el carrito para obtener su stock actual:
   const cartProduct = cartItems.find(item => item.id === product.id);
   const productStock = cartProduct ? cartProduct.stock : product.stock;
   const handleAdd = (quantity) => {
@@ -44,9 +43,10 @@ function ItemDetail({ product }) {
               <p className="text-yellow-500 mb-2">¡Últimas {productStock} unidades!</p>
             )}
             <ItemCount
-              stock={productStock} // Pasamos productStock a ItemCount
+              stock={productStock} 
               initial={0}
               onAdd={handleAdd}
+              setCartItems={setCartItems} // Pasa setCartItems a ItemCount
             />
           </div>
         ) : (
