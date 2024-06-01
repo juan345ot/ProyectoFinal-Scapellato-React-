@@ -1,6 +1,8 @@
+// ItemDetailContainer.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getProductById } from '../../mock/asyncMock';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../main'; // Importa db 
 import ItemDetail from '../ItemDetail/ItemDetail';
 
 function ItemDetailContainer() {
@@ -9,16 +11,24 @@ function ItemDetailContainer() {
   const { itemId } = useParams();
 
   useEffect(() => {
-    getProductById(itemId)
-      .then(product => {
-        setProduct(product);
-      })
-      .catch(error => {
+    const fetchProduct = async () => {
+      try {
+        const docRef = doc(db, 'ItemCollection', itemId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setProduct({ id: docSnap.id, ...docSnap.data() });
+        } else {
+          console.log("El producto no existe"); 
+        }
+      } catch (error) {
         console.error('Error fetching product:', error);
-      })
-      .finally(() => {
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchProduct();
   }, [itemId]);
 
   return (

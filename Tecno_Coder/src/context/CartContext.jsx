@@ -19,25 +19,22 @@ export const CartProvider = ({ children }) => {
   const addItem = (item, quantity) => {
     if (quantity > 0 && item.stock >= quantity) {
       setCartItems(prevCartItems => {
-        // Busca el item en el carrito
         const existingItemIndex = prevCartItems.findIndex(
           (cartItem) => cartItem.id === item.id
         );
 
         if (existingItemIndex !== -1) {
-          // Si el item ya está en el carrito, actualiza la cantidad y el stock
           const updatedCartItems = [...prevCartItems];
           updatedCartItems[existingItemIndex] = {
             ...updatedCartItems[existingItemIndex],
             quantity: updatedCartItems[existingItemIndex].quantity + quantity,
-            stock: updatedCartItems[existingItemIndex].stock - quantity,
+            stock: updatedCartItems[existingItemIndex].stock - quantity, // Actualiza el stock aquí
           };
           return updatedCartItems;
         } else {
-          // Si el item no está en el carrito, agrégalo
           return [
             ...prevCartItems,
-            { ...item, quantity, stock: item.stock - quantity },
+            { ...item, quantity, stock: item.stock - quantity }, // Actualiza el stock aquí
           ];
         }
       });
@@ -129,9 +126,9 @@ export const CartProvider = ({ children }) => {
       totalPrice: totalPrice(cartItems),
       totalQuantity: totalQuantity(cartItems),
       increaseItemQuantity,
-      decreaseItemQuantity, // Agrega decreaseItemQuantity al contexto
+      decreaseItemQuantity, 
     }}> 
-      {children}
+      {children} 
     </CartContext.Provider>
   );
 };

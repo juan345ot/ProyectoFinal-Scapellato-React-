@@ -2,6 +2,8 @@ import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../../context/CartContext';
 
+// Importa el nuevo componente
+import Checkout from '../Checkout/Checkout'; // Asumiendo que Checkout.jsx está en src/components/Checkout
 function Cart() {
   const { cartItems, removeItem, clearCart, totalPrice, decreaseItemQuantity, increaseItemQuantity } = useContext(CartContext);
 

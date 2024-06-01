@@ -2,13 +2,13 @@ import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../../context/CartContext'; 
 
-function Item({ product, onAdd, setCartItems }) { // Recibe setCartItems como prop
+function Item({ product, onAdd, setCartItems }) { 
   const { cartItems } = useContext(CartContext);
   const formattedPrice = product.price.toLocaleString();
 
-  // Buscamos el producto en el carrito para obtener su stock:
   const cartProduct = cartItems.find(item => item.id === product.id);
   const productStock = cartProduct ? cartProduct.stock : product.stock;
+
   return (
     <li key={product.id} className="item border p-4 rounded-lg shadow-md bg-white">
       <Link to={`/item/${product.id}`} className="block text-inherit no-underline"> 
@@ -28,5 +28,4 @@ function Item({ product, onAdd, setCartItems }) { // Recibe setCartItems como pr
     </li>
   );
 }
-
 export default Item;

@@ -1,21 +1,29 @@
+// ItemListContainer.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from 'react-router-dom';
-import { getProducts, getProductsByCategory } from '../../mock/asyncMock';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../main';  // Importa db
 import ItemList from '../ItemList/ItemList';
-import { CartContext } from '../../context/CartContext'; 
+import { CartContext } from '../../context/CartContext';
 
-function ItemListContainer({ greeting }) {
-  const { cartItems } = useContext(CartContext); // Accede al contexto
-  const [products, setProducts] = useState([]); // Estado para los productos
+function ItemListContainer({ greeting }) { 
+  const { cartItems } = useContext(CartContext);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { categoryId } = useParams();
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const fetchedProducts = categoryId
-          ? await getProductsByCategory(categoryId)
-          : await getProducts();
-        setProducts(fetchedProducts); // Actualiza solo el estado de los productos
+        let q = categoryId
+          ? query(collection(db, 'ItemCollection'), where('category', '==', categoryId))
+          : collection(db, 'ItemCollection');
+        const querySnapshot = await getDocs(q);
+        const fetchedProducts = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setProducts(fetchedProducts);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
@@ -23,9 +31,8 @@ function ItemListContainer({ greeting }) {
       }
     };
     fetchProducts();
-  }, [categoryId]); //  cartItems  ya no es una dependencia de useEffect
-  const handleAdd = (quantity, product) => {
-    // addItem(product, quantity); // Probablemente necesites addItem aquí
+  }, [categoryId]); 
+  const handleAdd = (quantity, product) => { 
     console.log(`Se agregaron ${quantity} unidades de ${product.title} al carrito`);
   };
   return (
@@ -34,10 +41,10 @@ function ItemListContainer({ greeting }) {
       {loading ? (
         <p>Cargando productos...</p>
       ) : (
-        <ItemList products={products} onAdd={handleAdd} /> // Usa 'products' aquí
+        <ItemList products={products} onAdd={handleAdd} /> 
       )}
     </div>
   );
 }
 
-export default ItemListContainer;
+export default ItemListContainer; 
