@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
-import ItemCount from '../ItemCount/ItemCount';
+import { CartContext } from '../../context/CartContext'; 
 
-function Item({ product, onAdd, resetItemCount }) {
-  const formattedPrice = product.price.toLocaleString(); 
+function Item({ product, onAdd, setCartItems }) { // Recibe setCartItems como prop
+  const { cartItems } = useContext(CartContext);
+  const formattedPrice = product.price.toLocaleString();
+
+  // Buscamos el producto en el carrito para obtener su stock:
+  const cartProduct = cartItems.find(item => item.id === product.id);
+  const productStock = cartProduct ? cartProduct.stock : product.stock;
   return (
     <li key={product.id} className="item border p-4 rounded-lg shadow-md bg-white">
       <Link to={`/item/${product.id}`} className="block text-inherit no-underline"> 
@@ -12,10 +17,14 @@ function Item({ product, onAdd, resetItemCount }) {
         <p className="text-gray-600">{product.description}</p>
         <p className="text-lg font-bold mt-2">${formattedPrice}</p>
       </Link>
-      <ItemCount stock={product.stock} initial={product.count || 0} onAdd={onAdd} resetItemCount={resetItemCount} />
-      <Link to={`/item/${product.id}`} className="bg-dorado-claro hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded mt-4 block text-center">
-        Ver más detalles
-      </Link>
+
+      {productStock > 0 ? ( 
+        <Link to={`/item/${product.id}`} className="bg-dorado-claro hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded mt-4 block text-center">
+          Ver más detalles
+        </Link>
+      ) : (
+        <p className="text-red-500 mt-4 text-center">¡Producto sin stock!</p> 
+      )}
     </li>
   );
 }

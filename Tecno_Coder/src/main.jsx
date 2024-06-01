@@ -5,9 +5,8 @@ import { BrowserRouter } from 'react-router-dom';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <CartProvider>
-    <BrowserRouter> {}
+    <BrowserRouter>
       <App /> 
     </BrowserRouter>
   </CartProvider>
 );
-

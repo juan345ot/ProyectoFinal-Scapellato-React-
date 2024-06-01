@@ -27,7 +27,7 @@ function ItemDetailContainer() {
         {loading ? (
           <p>Cargando detalle del producto...</p>
         ) : product ? (
-          <ItemDetail product={product} />
+          <ItemDetail product={product} stock={product.stock} /> 
         ) : (
           <p>Producto no encontrado.</p>
         )}
