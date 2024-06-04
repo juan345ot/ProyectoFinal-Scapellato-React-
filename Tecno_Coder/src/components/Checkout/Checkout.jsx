@@ -39,11 +39,12 @@ function Checkout() {
               price,
               quantity,
               image,
-              selectedOptions, // Incluye las opciones seleccionadas en la orden
+              selectedOptions, 
             })
           ),
           date: serverTimestamp(),
           total: totalPrice,
+          estado: 'generada'  // Estado inicial de la orden
         };
 
         try {
@@ -54,17 +55,12 @@ function Checkout() {
               const itemRef = doc(db, 'ItemCollection', item.id);
               const itemDoc = await t.get(itemRef);
 
-              if (
-                itemDoc.exists() &&
-                itemDoc.data().stock >= item.quantity
-              ) {
+              if (itemDoc.exists() && itemDoc.data().stock >= item.quantity) {
                 await t.update(itemRef, {
                   stock: itemDoc.data().stock - item.quantity,
                 });
               } else {
-                throw new Error(
-                  `No hay suficiente stock de ${item.title}`
-                );
+                throw new Error(`No hay suficiente stock de ${item.title}`);
               }
             })
           );
@@ -274,4 +270,3 @@ function Checkout() {
 }
 
 export default Checkout;
-

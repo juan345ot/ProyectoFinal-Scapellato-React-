@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom'; // Importa Link
+import { Link } from 'react-router-dom';
 
 function Orders() {
   const { user } = useAuth();
@@ -57,14 +57,19 @@ function Orders() {
                 <p className="text-gray-600">{formatDate(order.date)}</p>
               </div>
 
-              <ul className="border-t border-gray-200">
+              {/* Mostrar estado de la orden */}
+              <p className="text-sm font-medium text-gray-900">
+                Estado: <span className="font-bold">{order.estado}</span>
+              </p> 
+
+              <ul className="border-t border-gray-200 mt-2"> 
                 {order.items.map(item => (
                   <li key={item.id} className="py-2 flex justify-between items-center">
                     <div className="flex items-center">
                       <img 
                         src={`/images/${item.image}`} 
                         alt={item.title} 
-                        className="item-image w-16 h-16 object-center object-contain rounded-lg border-black border-2 mr-4" // Estilos de Item.jsx
+                        className="item-image w-16 h-16 object-center object-contain rounded-lg border-black border-2 mr-4" 
                       />
                       <div>
                         <p className="font-medium">{item.title}</p>
@@ -84,7 +89,6 @@ function Orders() {
         </ul>
       )}
 
-      {/* Botones con mismos estilos */}
       <div className="flex justify-center space-x-4 mt-4"> 
         <Link to="/" className="bg-dorado-claro hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">
           Volver al inicio

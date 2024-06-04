@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ItemCount from '../ItemCount/ItemCount';
 import { CartContext } from '../../context/CartContext';
@@ -9,15 +9,24 @@ import './ItemDetail.css';
 function ItemDetail({ product }) { 
   const { cartItems, addItem } = useContext(CartContext);
   const [itemCount, setItemCount] = useState(0);
-  const [selectedOptions, setSelectedOptions] = useState({}); // Para almacenar las opciones seleccionadas
+  const [selectedOptions, setSelectedOptions] = useState({}); 
   const { addWishlistItem, removeWishlistItem, isProductInWishlist } = useContext(WishlistContext);
+  const [areOptionsSelected, setAreOptionsSelected] = useState(false); 
 
   const cartProduct = cartItems.find(item => item.id === product.id);
   const productStock = cartProduct ? cartProduct.stock : product.stock;
   
+  useEffect(() => {
+    const allOptionsSelected = Object.values(selectedOptions).every(value => value !== ''); 
+    setAreOptionsSelected(allOptionsSelected);
+  }, [selectedOptions]); 
   const handleAdd = (quantity) => {
+    if (!areOptionsSelected) { 
+      alert('Por favor, selecciona todas las opciones del producto.');
+      return; 
+    }
     setItemCount(quantity);
-    addItem(product, quantity, selectedOptions); // Envía las opciones seleccionadas al carrito
+    addItem(product, quantity, selectedOptions); 
   };
 
   const handleOptionChange = (optionKey, optionValue) => {
@@ -53,7 +62,6 @@ function ItemDetail({ product }) {
           {formattedPrice}
         </p>
 
-        {/* Mostrar opciones si existen */}
         {product.options && Object.keys(product.options).map(optionKey => (
           <div key={optionKey} className="mb-4">
             <label htmlFor={optionKey} className="block text-sm font-medium text-gray-700">
@@ -87,13 +95,14 @@ function ItemDetail({ product }) {
               stock={productStock} 
               initial={0}
               onAdd={handleAdd}
+              disabled={!areOptionsSelected}
             />
           </div>
         ) : (
           <p className="text-red-500">¡Producto sin stock!</p>
         )}
 
-        {itemCount > 0 && ( 
+        {(itemCount > 0 && areOptionsSelected) && ( 
           <div className="mt-4 flex justify-center gap-4">
             <Link to="/">
               <button className="bg-dorado-claro hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">

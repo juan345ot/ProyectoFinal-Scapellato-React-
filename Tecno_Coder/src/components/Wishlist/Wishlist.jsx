@@ -3,14 +3,15 @@ import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { WishlistContext } from '../../context/WishlistContext';
 import { CartContext } from '../../context/CartContext';
-import ItemCount from '../ItemCount/ItemCount'; // Importa el componente ItemCount
+import ItemCount from '../ItemCount/ItemCount'; 
 
 function Wishlist() {
   const { wishlistItems, removeWishlistItem } = useContext(WishlistContext);
-  const { addItem } = useContext(CartContext); // Para agregar al carrito
+  const { addItem } = useContext(CartContext); 
 
-  const handleAddToCart = (item) => {
-    addItem(item, 1); // O la cantidad que desees agregar
+  // Modifica handleAddToCart para recibir la cantidad
+  const handleAddToCart = (item, quantity) => { 
+    addItem(item, quantity); 
   };
 
   return (
@@ -28,7 +29,8 @@ function Wishlist() {
                   <h3 className="wishlist-item-title text-base font-semibold mb-2">{item.title}</h3>
                   <p className="wishlist-item-price text-sm">${item.price.toLocaleString()}</p>
                   <div className="mt-2">
-                    <ItemCount stock={item.stock} initial={1} onAdd={() => handleAddToCart(item)} /> {/* Agrega ItemCount aquí */}
+                    {/* Pasa la cantidad a handleAddToCart */}
+                    <ItemCount stock={item.stock} initial={0} onAdd={(quantity) => handleAddToCart(item, quantity)} /> 
                   </div>
                   <button onClick={() => removeWishlistItem(item.id)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs mt-2">
                     Eliminar
@@ -45,6 +47,13 @@ function Wishlist() {
             </Link>
           </div>
         )}
+
+        {/* Botón Volver al inicio */}
+        <div className="flex justify-center space-x-4 mt-4"> 
+          <Link to="/" className="bg-dorado-claro hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">
+            Volver al inicio
+          </Link>
+        </div>
       </div>
     </div>
   );
