@@ -1,164 +1,277 @@
-import React, { useState, useContext } from 'react';
-import { db } from '../../main';
-import { 
-  collection, 
-  addDoc, 
-  serverTimestamp, 
-  runTransaction, 
-  doc 
-} from 'firebase/firestore'; 
+import React, { useState, useContext, useEffect } from 'react';
+import { db } from '../../firebase';
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  runTransaction,
+  doc,
+} from 'firebase/firestore';
 import { CartContext } from '../../context/CartContext';
-import { Link, useNavigate } from 'react-router-dom'; 
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 function Checkout() {
   const { cartItems, clearCart, totalPrice } = useContext(CartContext);
-  const [buyer, setBuyer] = useState({ 
-    name: '', 
-    phone: '', 
-    email: '', 
-    confirmEmail: '' 
-  });
+  const { user } = useAuth();
   const [orderId, setOrderId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null); 
+  const [error, setError] = useState(null);
+  const [showOrderSummary, setShowOrderSummary] = useState(false);
+  const [confirmedOrderItems, setConfirmedOrderItems] = useState([]);
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setBuyer({ 
-      ...buyer, 
-      [e.target.name]: e.target.value 
-    });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // Validación de correo electrónico y confirmación
-    if (!validateEmail(buyer.email)) {
-      setError('Por favor, ingresa un correo electrónico válido.');
-      setLoading(false);
-      return;
-    } else if (buyer.email !== buyer.confirmEmail) {
-      setError('Los correos electrónicos no coinciden.');
-      setLoading(false);
-      return;
-    } 
-
     try {
-      // Iniciar la transacción
-      await runTransaction(db, async (t) => { 
+      await runTransaction(db, async (t) => {
         const orderData = {
-          buyer,
-          items: cartItems.map(({ id, title, price, quantity }) => ({
-            id,
-            title,
-            price,
-            quantity,
-          })),
+          buyer: {
+            email: user.email,
+          },
+          items: cartItems.map(
+            ({ id, title, price, quantity, image, selectedOptions }) => ({
+              id,
+              title,
+              price,
+              quantity,
+              image,
+              selectedOptions, // Incluye las opciones seleccionadas en la orden
+            })
+          ),
           date: serverTimestamp(),
           total: totalPrice,
         };
-  
-        // Intentar crear la orden y actualizar el stock dentro de la transacción
+
         try {
-          // 1. Crear la orden en Firestore
           const orderRef = await addDoc(collection(db, 'Orders'), orderData);
-          setOrderId(orderRef.id); 
-          // 2. Actualizar el stock de los productos
+          setOrderId(orderRef.id);
           await Promise.all(
             cartItems.map(async (item) => {
               const itemRef = doc(db, 'ItemCollection', item.id);
               const itemDoc = await t.get(itemRef);
 
-              if (itemDoc.exists() && itemDoc.data().stock >= item.quantity) {
-                await t.update(itemRef, { stock: itemDoc.data().stock - item.quantity });
+              if (
+                itemDoc.exists() &&
+                itemDoc.data().stock >= item.quantity
+              ) {
+                await t.update(itemRef, {
+                  stock: itemDoc.data().stock - item.quantity,
+                });
               } else {
-                // No hay suficiente stock, revertir la transacción
-                throw new Error(`No hay suficiente stock de ${item.title}`); 
+                throw new Error(
+                  `No hay suficiente stock de ${item.title}`
+                );
               }
             })
           );
         } catch (error) {
-          // Capturar error dentro de la transacción (por ejemplo, falta de stock)
-          console.error("Error en la transacción:", error);
-          setError(error.message); // Mostrar un mensaje de error específico
-          throw error; // Re-lanzar el error para detener la transacción
+          console.error('Error en la transacción:', error);
+          setError(error.message);
+          throw error;
         }
       });
 
-      clearCart(); 
+      setConfirmedOrderItems(cartItems);
+      clearCart();
+      setShowOrderSummary(true);
     } catch (error) {
-      // Capturar errores generales de la transacción 
       console.error('Error al procesar la orden:', error);
-
-      // Mostrar un mensaje de error genérico si no se especificó uno antes
       if (!error.message) {
-        setError('Hubo un error al procesar tu orden. Por favor, inténtalo de nuevo más tarde.');
+        setError(
+          'Hubo un error al procesar tu orden. Por favor, inténtalo de nuevo más tarde.'
+        );
       }
     } finally {
       setLoading(false);
     }
   };
-  const validateEmail = (email) => { 
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); 
-  }; 
+
   return (
-    <div className="checkout-form-container p-4 mx-auto bg-white rounded-xl shadow-md overflow-hidden w-full bg-gray-200">
-      <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-center mb-3">Completa tus datos</h2>
-      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-gray-100">
+      <div className="checkout-form-container p-8 bg-white rounded-lg shadow-md w-auto md:w-3/4 lg:w-2/3 xl:w-1/2">
+        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+          Checkout
+        </h2>
+        {error && (
+          <p className="text-red-500 text-center mb-4">{error}</p>
+        )}
 
-      {/* Order ID confirmation */}
-      {orderId && ( 
-        <div> 
-            <p>¡Tu orden se ha creado con éxito! ID de la orden: {orderId}</p> 
-            <Link to="/">Volver al inicio</Link>
-        </div>
-      )}
+        {/* Resumen de la orden */}
+        {user && showOrderSummary && (
+          <div className="order-confirmation w-full p-4">
+            <h3 className="text-lg font-semibold mb-2 text-center">
+              ¡Gracias por tu compra!
+            </h3>
+            <p className="mb-4 text-center">
+              Tu número de orden es: {orderId}
+            </p>
+            <div className="order-summary border border-gray-300 p-4 rounded-md">
+              <h4 className="text-md font-semibold mb-2">
+                Resumen de la compra:
+              </h4>
+              <ul className="grid grid-cols-1 gap-4">
+                {/* Aplicamos grid aquí también */}
+                {confirmedOrderItems.map((item) => (
+                  <li
+                    key={item.id}
+                    className="border p-4 rounded-md"
+                  >
+                    {/* Estilos para cada item */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Grid dentro de cada item */}
+                      <img
+                        src={`/images/${item.image}`}
+                        alt={item.title}
+                        className="w-full h-auto object-cover rounded-md"
+                      />
+                      <div className="flex flex-col justify-between">
+                        <div>
+                          <p className="text-base font-medium">
+                            {item.title}
+                          </p>
+                          {/* Mostrar opciones seleccionadas */}
+                          {Object.entries(item.selectedOptions).map(([key, value]) => (
+                            <p key={key} className="text-sm text-gray-500">
+                              {key}: {value}
+                            </p>
+                          ))}
+                          <p className="text-sm text-gray-500">
+                            Cantidad: {item.quantity}
+                          </p>
+                        </div>
+                        <p className="text-base font-medium text-gray-800 text-right">
+                          $
+                          {(item.quantity * item.price).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <hr className="my-4 border-gray-300" />
+              <div className="flex justify-between items-center text-lg font-semibold">
+                <p>Total:</p>
+                <p>
+                  $
+                  {confirmedOrderItems
+                    .reduce(
+                      (total, item) =>
+                        total + item.price * item.quantity,
+                      0
+                    )
+                    .toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-center space-x-4 mt-4">
+              <Link
+                to="/"
+                className="bg-dorado-claro hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded"
+              >
+                {/* Estilos del otro botón */}
+                Volver al inicio
+              </Link>
+              <Link
+                to="/orders"
+                className="bg-dorado-claro hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded"
+              >
+                Ir a mis órdenes
+              </Link>
+            </div>
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
-        <input
-          type="text"
-          name="name"
-          placeholder="Nombre completo"
-          value={buyer.name}
-          onChange={handleChange}
-          required
-          className="border border-gray-400 px-3 py-2 rounded-md"
-        />
-        <input
-          type="tel"
-          name="phone"
-          placeholder="Teléfono"
-          value={buyer.phone}
-          onChange={handleChange}
-          required
-          className="border border-gray-400 px-3 py-2 rounded-md"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Correo electrónico"
-          value={buyer.email}
-          onChange={handleChange}
-          required
-          className="border border-gray-400 px-3 py-2 rounded-md"
-        />
-        <input 
-          type="email"
-          name="confirmEmail"
-          placeholder="Confirmar correo electrónico"
-          value={buyer.confirmEmail}
-          onChange={handleChange}
-          required
-          className="border border-gray-400 px-3 py-2 rounded-md"
-        />
-        <button type="submit" disabled={loading} className="bg-dorado-claro hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded">
-          {loading ? 'Procesando...' : 'Finalizar compra'}
-        </button>
-      </form>
+        {!showOrderSummary && user && (
+          <div className="order-preview w-full p-4">
+            <div className="order-summary border border-gray-300 p-4 rounded-md">
+              <h4 className="text-md font-semibold mb-2">
+                Resumen de la compra:
+              </h4>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Grid para items */}
+                {cartItems.map((item) => (
+                  <li
+                    key={item.id}
+                    className="border p-4 rounded-md"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <img
+                        src={`/images/${item.image}`}
+                        alt={item.title}
+                        className="w-full h-auto object-cover rounded-md"
+                      />
+                      <div className="flex flex-col justify-between">
+                        <div>
+                          <p className="text-base font-medium">
+                            {item.title}
+                          </p>
+                          {/* Mostrar opciones seleccionadas */}
+                          {Object.entries(item.selectedOptions).map(([key, value]) => (
+                            <p key={key} className="text-sm text-gray-500">
+                              {key}: {value}
+                            </p>
+                          ))}
+                          <p className="text-sm text-gray-500">
+                            Cantidad: {item.quantity}
+                          </p>
+                        </div>
+                        <p className="text-base font-medium text-gray-800 text-right">
+                          $
+                          {(item.quantity * item.price).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <hr className="my-4 border-gray-300" />
+              <div className="flex justify-between items-center text-lg font-semibold">
+                <p>Total:</p>
+                <p>${totalPrice.toLocaleString()}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="bg-dorado-claro hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400 mt-4 w-full"
+            >
+              {loading
+                ? 'Procesando...'
+                : `Comprar como ${user.email}`}
+            </button>
+          </div>
+        )}
+
+        {!user && (
+          <div className="text-center mt-4 w-full p-4">
+            <p className="text-gray-600">
+              Debes iniciar sesión o registrarte para continuar con
+              la compra.
+            </p>
+            <div className="flex justify-center space-x-4 mt-4">
+              <Link
+                to="/login"
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Iniciar sesión
+              </Link>
+              <Link
+                to="/signin"
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Registrarse
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
 export default Checkout;
+

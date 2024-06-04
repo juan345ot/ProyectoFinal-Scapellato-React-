@@ -1,30 +1,36 @@
+// components/Item.jsx
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { CartContext } from '../../context/CartContext'; 
+import { WishlistContext } from '../../context/WishlistContext';
+import WishlistIcon from '../WishlistIcon/WishlistIcon';
 
-function Item({ product, onAdd, setCartItems }) { 
-  const { cartItems } = useContext(CartContext);
-  const formattedPrice = product.price.toLocaleString();
-
-  const cartProduct = cartItems.find(item => item.id === product.id);
-  const productStock = cartProduct ? cartProduct.stock : product.stock;
-
+function Item({ product }) {
+  const { isProductInWishlist } = useContext(WishlistContext); 
   return (
-    <li key={product.id} className="item border p-4 rounded-lg shadow-md bg-white">
-      <Link to={`/item/${product.id}`} className="block text-inherit no-underline"> 
-        <img src={`/images/${product.image}`} alt={product.title} className="w-full h-48 object-contain rounded-lg border-black border-4" />
-        <h3 className="text-lg font-semibold mt-2">{product.title}</h3>
-        <p className="text-gray-600">{product.description}</p>
-        <p className="text-lg font-bold mt-2">${formattedPrice}</p>
+    <li className="item-card bg-white p-4 rounded-lg shadow-md overflow-hidden flex flex-col"> 
+      <Link to={`/item/${product.id}`}>
+        <img 
+          src={`/images/${product.image}`} 
+          alt={product.title} 
+          className="item-image w-full h-48 object-center object-contain rounded-lg border-black border-2 mb-4" 
+        /> 
       </Link>
-
-      {productStock > 0 ? ( 
-        <Link to={`/item/${product.id}`} className="bg-dorado-claro hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded mt-4 block text-center">
-          Ver más detalles
-        </Link>
-      ) : (
-        <p className="text-red-500 mt-4 text-center">¡Producto sin stock!</p> 
-      )}
+      <div className="item-info flex-grow"> 
+        <div className="flex justify-between items-center"> 
+          <h3 className="item-title text-lg font-semibold mb-2">
+            <Link to={`/item/${product.id}`}>{product.title}</Link> 
+          </h3>
+          <WishlistIcon 
+            product={product} 
+            isProductInWishlist={isProductInWishlist(product.id)} 
+          />
+        </div>
+        <p className="item-price text-gray-800">${product.price.toLocaleString()}</p>
+      </div>
+      {/* Botón "Ver Detalle" */}
+      <Link to={`/item/${product.id}`} className="bg-dorado-claro py-2 px-4 rounded-md text-black font-bold text-center hover:bg-yellow-400 mt-auto"> 
+        Ver Detalle
+      </Link>
     </li>
   );
 }

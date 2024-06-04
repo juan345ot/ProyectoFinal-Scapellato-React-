@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './CategoryList.css';
 import { Link } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore'; 
-import { db } from '../../main';  // Importa db desde index.jsx
-
+import { db } from '../../firebase'; // Asegúrate de que la ruta sea correcta
 function CategoryList() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);

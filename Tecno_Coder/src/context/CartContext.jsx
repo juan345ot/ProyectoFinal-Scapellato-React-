@@ -16,11 +16,12 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addItem = (item, quantity) => {
+  const addItem = (item, quantity, selectedOptions = {}) => { 
     if (quantity > 0 && item.stock >= quantity) {
       setCartItems(prevCartItems => {
         const existingItemIndex = prevCartItems.findIndex(
-          (cartItem) => cartItem.id === item.id
+          (cartItem) => cartItem.id === item.id && 
+                       JSON.stringify(cartItem.selectedOptions) === JSON.stringify(selectedOptions)
         );
 
         if (existingItemIndex !== -1) {
@@ -28,13 +29,13 @@ export const CartProvider = ({ children }) => {
           updatedCartItems[existingItemIndex] = {
             ...updatedCartItems[existingItemIndex],
             quantity: updatedCartItems[existingItemIndex].quantity + quantity,
-            stock: updatedCartItems[existingItemIndex].stock - quantity, // Actualiza el stock aquí
+            stock: updatedCartItems[existingItemIndex].stock - quantity, 
           };
           return updatedCartItems;
         } else {
           return [
             ...prevCartItems,
-            { ...item, quantity, stock: item.stock - quantity }, // Actualiza el stock aquí
+            { ...item, quantity, stock: item.stock - quantity, selectedOptions },
           ];
         }
       });
@@ -43,16 +44,11 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const removeItem = (itemId) => {
+  const removeItem = (itemId, selectedOptions = {}) => {
     setCartItems(prevCartItems => {
-      const itemToRemove = prevCartItems.find(item => item.id === itemId);
-      if (itemToRemove) {
-        const updatedCartItems = prevCartItems.map(item => 
-          item.id === itemId ? { ...item, quantity: 0, stock: item.stock + itemToRemove.quantity } : item
-        );
-        return updatedCartItems.filter(item => item.quantity > 0);
-      }
-      return prevCartItems;
+      return prevCartItems.filter(item => 
+        item.id !== itemId || JSON.stringify(item.selectedOptions) !== JSON.stringify(selectedOptions)
+      );
     });
   };
 
@@ -60,45 +56,47 @@ export const CartProvider = ({ children }) => {
     setCartItems([]);
   };
 
-  const increaseItemQuantity = (itemId) => {
+  // ... (Las funciones increaseItemQuantity y decreaseItemQuantity deben actualizarse también)
+  const increaseItemQuantity = (itemId, selectedOptions = {}) => {
     setCartItems(prevCartItems => {
-      const existingItemIndex = prevCartItems.findIndex(item => item.id === itemId);
-
-      // Verifica si el producto ya está en el carrito
+      const existingItemIndex = prevCartItems.findIndex(
+        (item) => item.id === itemId && 
+                 JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions)
+      );
       if (existingItemIndex !== -1) {
-        // Verifica si hay suficiente stock disponible
         if (prevCartItems[existingItemIndex].stock > 0) {
-          // Crea una copia del carrito y actualiza la cantidad y el stock del producto
           return prevCartItems.map(item =>
-            item.id === itemId
+            item.id === itemId && 
+            JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions)
               ? { 
                   ...item, 
                   quantity: item.quantity + 1, 
-                  stock: item.stock - 1 // Decrementa el stock disponible
+                  stock: item.stock - 1 
                 }
               : item
           );
         } else {
-          // Muestra un mensaje si no hay suficiente stock
           alert("No hay suficiente stock disponible.");
-          return prevCartItems; // Devuelve el carrito sin cambios
+          return prevCartItems;
         }
       } else {
-        // Si el producto no está en el carrito, no hagas nada
         return prevCartItems;
       }
     });
   };
 
-  const decreaseItemQuantity = (itemId) => {
+  const decreaseItemQuantity = (itemId, selectedOptions = {}) => {
     setCartItems(prevCartItems => {
-      const existingItemIndex = prevCartItems.findIndex(item => item.id === itemId);
+      const existingItemIndex = prevCartItems.findIndex(
+        (item) => item.id === itemId && 
+                 JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions) 
+      );
 
       if (existingItemIndex !== -1) {
         if (prevCartItems[existingItemIndex].quantity > 1) {
-          // Si la cantidad es mayor que 1, disminuye normalmente
           return prevCartItems.map(item =>
-            item.id === itemId
+            item.id === itemId && 
+            JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions)
               ? { 
                   ...item, 
                   quantity: item.quantity - 1, 
@@ -107,11 +105,12 @@ export const CartProvider = ({ children }) => {
               : item
           );
         } else {
-          // Si la cantidad es 1 (al presionar "-" llegará a 0), elimina el item
-          return prevCartItems.filter(item => item.id !== itemId);
+          return prevCartItems.filter(
+            (item) => item.id !== itemId || 
+                     JSON.stringify(item.selectedOptions) !== JSON.stringify(selectedOptions)
+          );
         }
       } else {
-        // Si el producto no está en el carrito, no hagas nada
         return prevCartItems;
       }
     });

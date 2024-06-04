@@ -1,0 +1,12 @@
+/* components/WishlistIcon/WishlistIcon.css */
+.wishlist-icon {
+  @apply w-6 h-6 cursor-pointer;
+  fill: none; 
+  stroke: currentColor; 
+}
+
+.wishlist-icon.active svg {
+  fill: red;
+  stroke-width: 2;  /* Asegurar que el borde sea visible */
+  stroke: black;
+}

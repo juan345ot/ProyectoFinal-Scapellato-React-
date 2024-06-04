@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
-import { db } from '../../main';  // Importa db
+import { db } from '../../firebase';  // Importa db
 import ItemList from '../ItemList/ItemList';
 import { CartContext } from '../../context/CartContext';
 import { addItem } from '../../context/cartHelpers'; // Importa addItem

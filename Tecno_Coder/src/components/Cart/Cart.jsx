@@ -1,54 +1,75 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../../context/CartContext';
-
-// Importa el nuevo componente
 import Checkout from '../Checkout/Checkout'; 
 function Cart() {
-  const { cartItems, removeItem, clearCart, totalPrice, decreaseItemQuantity, increaseItemQuantity } = useContext(CartContext);
-
-  const handleRemoveItem = (itemId) => {
-    removeItem(itemId);
+  const { 
+    cartItems, 
+    removeItem, 
+    clearCart, 
+    totalPrice, 
+    decreaseItemQuantity, 
+    increaseItemQuantity 
+  } = useContext(CartContext);
+  const handleRemoveItem = (itemId, selectedOptions) => {
+    removeItem(itemId, selectedOptions);
   };
 
-  const handleDecreaseQuantity = (itemId) => {
-    decreaseItemQuantity(itemId);
+  const handleDecreaseQuantity = (itemId, selectedOptions) => {
+    decreaseItemQuantity(itemId, selectedOptions);
+  };
+
+  const handleIncreaseQuantity = (itemId, selectedOptions) => {
+    increaseItemQuantity(itemId, selectedOptions);
   };
   return (
     <div className="cart-container min-h-screen px-4 py-8 flex flex-col items-center justify-center">
-      <div className="bg-white p-4 rounded-xl shadow-md w-full max-w-lg overflow-y-auto">
+      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-3xl overflow-y-auto"> 
         <h2 className="cart-title text-xl font-bold mb-4 text-center">Carrito de Compras</h2>
         {cartItems.length > 0 ? (
           <>
             <ul className="cart-items space-y-4">
               {cartItems.map((item) => (
-                <li key={item.id} className="cart-item grid grid-cols-1 sm:grid-cols-2 gap-4 p-2 bg-white rounded-lg shadow-md overflow-hidden">
-                  <img src={`/images/${item.image}`} alt={item.title} className="cart-item-image w-24 h-24 object-cover rounded-lg border-black border-2" />
+                <li key={item.id} className="cart-item grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white rounded-lg shadow-md overflow-hidden">
+                  <img src={`/images/${item.image}`} alt={item.title} className="item-image w-full h-48 object-center object-contain rounded-lg border-black border-2 mb-4" />
                   <div className="cart-item-details">
                     <h3 className="cart-item-title text-base font-semibold mb-2">{item.title}</h3>
+                    {/* Mostrar opciones seleccionadas */}
+                    {Object.entries(item.selectedOptions).map(([key, value]) => (
+                      <p key={key} className="text-sm text-gray-600">
+                        {key}: {value}
+                      </p>
+                    ))}
+
                     <div className="cart-item-quantity flex items-center text-sm">
                       <button
-                        onClick={() => handleDecreaseQuantity(item.id)}
+                        onClick={() => handleDecreaseQuantity(item.id, item.selectedOptions)} 
                         className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-2 rounded-l text-xs"
                       >
                         -
                       </button>
                       <span className="px-2">{item.quantity}</span>
                       <button
-                        onClick={() => increaseItemQuantity(item.id)} 
+                        onClick={() => handleIncreaseQuantity(item.id, item.selectedOptions)}
                         className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-2 rounded-r text-xs"
                       >
                         +
                       </button>
                     </div>
+
                     <p className="cart-item-price text-sm">${(item.price * item.quantity).toLocaleString()}</p>
-                    <button onClick={() => handleRemoveItem(item.id)} className="cart-item-remove bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs">
+
+                    <button 
+                      onClick={() => handleRemoveItem(item.id, item.selectedOptions)}
+                      className="cart-item-remove bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs"
+                    >
                       Eliminar
                     </button>
                   </div>
                 </li>
               ))}
             </ul>
+
             <div className="cart-total flex justify-between items-center mt-4">
               <button onClick={clearCart} className="cart-clear bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs">
                 Vaciar Carrito
